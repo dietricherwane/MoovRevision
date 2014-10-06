@@ -1,0 +1,25 @@
+# Read about fixtures at http://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  msisdn: MyString
+  subscription_id: 1
+  academic_level_id: 1
+  points: 1
+  right_answers: 1
+  wrong_answers: 1
+  current_question: 1
+  participations: 1
+  published: false
+  expires_at: 2014-09-22
+
+two:
+  msisdn: MyString
+  subscription_id: 1
+  academic_level_id: 1
+  points: 1
+  right_answers: 1
+  wrong_answers: 1
+  current_question: 1
+  participations: 1
+  published: false
+  expires_at: 2014-09-22

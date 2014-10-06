@@ -1,0 +1,12 @@
+<%= form_tag(import_questions_path, method: :post, multipart: true) do %>
+  <label for = "file">
+    Fichier à importer
+  </label>
+  <br />
+  <%= file_field_tag "file" %>
+  <br />
+  <br />
+  <%= submit_tag "valider", :data => {:disable_with => "Veuillez patienter"} %>
+<% end %>
+
+<%= @file %>

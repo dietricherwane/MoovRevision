@@ -1,0 +1,17 @@
+# Read about fixtures at http://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  wording: MyText
+  answer: MyText
+  points: 1
+  academic_level_id: 1
+  question_type_id: 1
+  published: false
+
+two:
+  wording: MyText
+  answer: MyText
+  points: 1
+  academic_level_id: 1
+  question_type_id: 1
+  published: false

@@ -1,0 +1,13 @@
+# Read about fixtures at http://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  name: MyString
+  question_type_id: 1
+  published: false
+  ussd_id: 1
+
+two:
+  name: MyString
+  question_type_id: 1
+  published: false
+  ussd_id: 1

@@ -1,0 +1,17 @@
+# Read about fixtures at http://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  message: MyString
+  gaming_session_id: 1
+  question_id: 1
+  correct: false
+  points: 1
+  account_id: 1
+
+two:
+  message: MyString
+  gaming_session_id: 1
+  question_id: 1
+  correct: false
+  points: 1
+  account_id: 1
