@@ -34,7 +34,19 @@ module Error
   end
   
   def self.create_an_account_first
-    return "send_question(question.wording) Veuillez créer un compte au préalable en envoyant XXX au XXXXX."
+    return "Veuillez créer un compte au préalable en envoyant XXX au XXXXX."
+  end
+  
+  def self.could_not_be_billed
+    return "Votre compte n'a pas pu être débité. Veuillez recharger et réessayer."
+  end
+  
+  def self.gaming_notice
+    return "Pour répondre aux questions, envoyez a ou b au xxxxx"
+  end
+  
+  def self.disable_account
+    return "MOOV REVISION\nVotre compte a été désactivé. N'hésitez pas à souscrire de nouveau." 
   end
 
 end

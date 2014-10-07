@@ -17,7 +17,7 @@ class QuestionsController < ApplicationController
         n = n + 1
         # Checks if all the required rows are presents
         if valid_row(@my_sheet, n)
-          @question = Question.new(wording: "#{(@my_sheet.cell(n, 1).strip rescue nil)}\na. #{(@my_sheet.cell(n, 2).strip rescue nil)}\nb. #{(@my_sheet.cell(n, 3).strip rescue nil)}\n Envoyez a ou b par SMS au #{}. Cumulez le maximum de points et gagnez de nombreux lots.", answer: (@my_sheet.cell(n, 4).strip rescue nil), points: 10, question_type_id: 2)
+          @question = Question.new(wording: "#{@my_sheet.cell(n, 1).strip}\na. #{@my_sheet.cell(n, 2).strip}\nb. #{@my_sheet.cell(n, 3).strip}\n Envoyez a ou b par SMS au #{}.", answer: @my_sheet.cell(n, 4).strip, points: 10, question_type_id: 2)
           @question.save
         end
       end
@@ -37,25 +37,29 @@ class QuestionsController < ApplicationController
         set_and_send_question
       end
     end
+    
+    render text: "0"
   end
   
   # Question to send when a user registers
   def send_registration_question
-    account = Account.find_by_msisdn(params[:msisdn])
-    academic_level = AcademicLevel.find_by_name(params[:academic_level_id])
+    @account = Account.find_by_msisdn(params[:msisdn])
+    academic_level = AcademicLevel.find_by_id(params[:academic_level_id])
     
     unless academic_level
-      question = QuestionType.general_knowledge_question_type.questions.where("published IS NOT FALSE AND id > #{account.current_question.to_i}").first rescue QuestionType.general_knowledge_question_type.questions.where("published IS NOT FALSE").first rescue nil
+      question = QuestionType.general_knowledge_question_type.questions.where("published IS NOT FALSE AND id > #{@account.current_question.to_i}").first rescue QuestionType.general_knowledge_question_type.questions.where("published IS NOT FALSE").first rescue nil
     else
-      question = account.academic_level.questions.where("published IS NOT FALSE AND id > #{account.current_question.to_i}").first rescue account.academic_level.questions.where("published IS NOT FALSE").first rescue nil
+      question = @account.academic_level.questions.where("published IS NOT FALSE AND id > #{@account.current_question.to_i}").first rescue @account.academic_level.questions.where("published IS NOT FALSE").first rescue nil
     end
     
     if !question.blank?
       send_question(question.wording)
-      if !@response.blank?
-        account.update_attributes(current_question: question.id, daily_count: (account.daily_count + 1))
+      if @response
+        @account.update_attributes(current_question: question.id, daily_count: (@account.daily_count.to_i + 1))
       end
     end
+    
+    render text: @response
   end
   
   def answer
@@ -65,11 +69,11 @@ class QuestionsController < ApplicationController
       if (text.strip.downcase rescue nil) == "stop"
         disable_account
       else       
-        if @account.daily_count < 20
+        if @account.daily_count.to_i < 20
           @transaction_id = DateTime.now
           # Bill the user
           billing
-          if user_billed?
+          if user_billed
             # Evaluate the given answer
             question = Question.find_by_id(@account.current_question)
             correct_answer = ((text.strip.downcase rescue nil) == question.answer)
@@ -79,18 +83,23 @@ class QuestionsController < ApplicationController
             wrong_answer = correct_answer ? 0 : 1 
             
             # Store the results
-            @account.answer.create(message: text, gaming_session_id: @account.gaming_sessions.first.id, question_id: @account.current_question, correct: correct, points: answer_points, transaction_id: @transaction_id, billed: true)            
-            @account.update_attributes(points: (@account.points + answer_points), right_answers: (@account.right_answers + right_answer), wrong_answers: (@account.wrong_answers + wrong_answer), participations: (@account.participations + 1))
-            @valid_gaming_session.update_attributes(points: (@valid_gaming_session.points + answer_points), right_answers: (@valid_gaming_session.right_answers + right_answer), wrong_answers: (@valid_gaming_session.wrong_answers + wrong_answer))
+            @account.answers.create(message: text, gaming_session_id: @account.gaming_sessions.first.id, question_id: @account.current_question, correct: correct_answer, points: answer_points, transaction_id: @transaction_id, billed: true)            
+            @account.update_attributes(points: (@account.points.to_i + answer_points), right_answers: (@account.right_answers.to_i + right_answer), wrong_answers: (@account.wrong_answers.to_i + wrong_answer), participations: (@account.participations.to_i + 1))
+            @valid_gaming_session.update_attributes(points: (@valid_gaming_session.points.to_i + answer_points), right_answers: (@valid_gaming_session.right_answers.to_i + right_answer), wrong_answers: (@valid_gaming_session.wrong_answers.to_i + wrong_answer))
             
             @session_question_type = @valid_gaming_session.question_type
             if weird_answer
               #send_gaming_notice
+              send_question(Error.gaming_notice)
             end
+            
+            # send_gaming_report
+            send_question("Vous avez #{correct_answer ? 'donné la bonne réponse. Félicitations!' : 'donné la mauvaise réponse.'} Vous cumulez: #{@account.points} points. Continuez de jouer pour gagner de nombreux lots.")
             
             set_and_send_question
           else
             #could_not_be_billed
+            send_question(Error.could_not_be_billed)
           end
         else
           # Session_over_for_today
@@ -99,53 +108,58 @@ class QuestionsController < ApplicationController
       end
     else
       #Create_an_account_first
+      send_question(Error.create_an_account_first)
     end
+    
+    render text: "0"
   end
   
   def disable_account
     if @account
       @account.update_attributes(published: false)
-      @account.gaming_sessions.update_attributes(unpublished: true, unpublished_at: DateTime.now)
+      @account.gaming_sessions.first.update_attributes(unpublished: true, unpublished_at: DateTime.now)
+      send_question(Error.disable_account)
     end
   end
   
   def set_and_send_question
     # If we have general knowledge questions type
     if @session_question_type.academic_levels.blank?
-      question = @session_question_type.questions.where("published IS NOT FALSE AND id > #{@account.current_question.to_i}").first rescue @session_question_type.questions.where("published IS NOT FALSE").first rescue nil
+      question = @session_question_type.questions.where("published IS NOT FALSE AND id > #{@account.current_question.to_i}").first rescue nil
+      question = @session_question_type.questions.where("published IS NOT FALSE").first rescue nil
     else
-      question = @account.academic_level.questions.where("published IS NOT FALSE AND id > #{@account.current_question.to_i}").first rescue @account.academic_level.questions.where("published IS NOT FALSE").first rescue nil
+      question = @account.academic_level.questions.where("published IS NOT FALSE AND id > #{@account.current_question.to_i}").first rescue nil
+      question = @account.academic_level.questions.where("published IS NOT FALSE AND id > 0").first rescue nil
     end
     
-    if !question.blank?
+    if question != blank?
       send_question(question.wording)
-      if !@response.blank?
-        account.update_attributes(current_question: question.id, daily_count: (@account.daily_count + 1))
+      if @response == true
+        @account.update_attributes(current_question: question.id, daily_count: (@account.daily_count.to_i + 1))
       end
     end
   end
   
   # Checks if the user already has a valid gaming session
   def valid_gaming_session
-    @valid_gaming_session = @account.gaming_sessions.where("unpublished IS NOT FALSE AND expires_at > '#{Date.today}'").first rescue nil
+    @valid_gaming_session = @account.gaming_sessions.where("unpublished IS NOT TRUE AND expires_at > '#{Date.today}'").first rescue nil
     @valid_gaming_session.blank? ? false : true
   end
   
   def send_question(question)
     parameter = Parameter.first
-    request = Typhoeus::Request.new(parameter.outgoing_sms_url, followlocation: true, method: :get, params: {text: URI.escape(question)})
+    request = Typhoeus::Request.new("#{parameter.outgoing_sms_url}to=#{@account.msisdn}&text=#{URI.escape(question)}", followlocation: true, method: :get)
+    #request = Typhoeus::Request.new("#{parameter.outgoing_sms_url}to=#{@account.msisdn}&text=#{URI.escape(question)}", followlocation: true, method: :get)
 
     request.on_complete do |response|
       if response.success?
-        @response = response.body
-        #@response = Registration.validate_registration(@screen_id)  
+        @response = ((response.body.strip rescue nil) == "0: Accepted for delivery")
       elsif response.timed_out?
-        #@response = Error.timeout(@screen_id)
+        @response = false
       elsif response.code == 0
-        #@response = Error.no_http_response(@screen_id)
+        @response = false
       else
-        #@response = Error.non_successful_http_response(@screen_id)
-        #@response = response.body
+        @response = false
       end
     end
 
@@ -183,7 +197,7 @@ class QuestionsController < ApplicationController
     
     request = Typhoeus::Request.new(parameter.billing_url, followlocation: true, body: billing_request_body, headers: {Accept: "text/xml", :'Content-length' => billing_request_body.bytesize, Authorization: "Basic base64_encode('NGSER-MR2014:NGSER-MR2014')", :'User-Agent' => user_agent})
 
-#=begin
+=begin
     request.on_complete do |response|
       if response.success?
         result = response.body  
@@ -197,10 +211,10 @@ class QuestionsController < ApplicationController
     end
 
     request.run
-#=end
+=end
     #response_body
-    #@xml = Nokogiri.XML(Billing.response_body).xpath('//methodResponse//params//param//value//struct//member')
-    @xml = Nokogiri.XML(result).xpath('//methodResponse//params//param//value//struct//member') rescue nil
+    @xml = Nokogiri.XML(Billing.response_body).xpath('//methodResponse//params//param//value//struct//member')
+    #@xml = Nokogiri.XML(result).xpath('//methodResponse//params//param//value//struct//member') rescue nil
     #render text: Billing.response_body.bytesize
   end
   
