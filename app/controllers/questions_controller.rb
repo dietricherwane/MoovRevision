@@ -72,8 +72,8 @@ class QuestionsController < ApplicationController
         if @account.daily_count.to_i < 20
           @transaction_id = DateTime.now
           # Bill the user
-          billing
-          if user_billed
+          #billing
+          if billing
             # Evaluate the given answer
             question = Question.find_by_id(@account.current_question)
             correct_answer = ((text.strip.downcase rescue nil) == question.answer)
@@ -192,12 +192,12 @@ class QuestionsController < ApplicationController
   # Bill customer from moov billing platform
   def billing
     user_agent = request.env['HTTP_USER_AGENT']
-    billing_request_body = Billing.request_body(@account.msisdn, @transaction_id)
-    parameter = Parameter.first
+    #parameter = Parameter.first
+    transaction_id = DateTime.now.to_i
     
-    request = Typhoeus::Request.new(parameter.billing_url, followlocation: true, body: billing_request_body, headers: {Accept: "text/xml", :'Content-length' => billing_request_body.bytesize, Authorization: "Basic base64_encode('NGSER-MR2014:NGSER-MR2014')", :'User-Agent' => user_agent})
+    request = Typhoeus::Request.new("http://37.0.73.3:3778", followlocation: true, params: {transaction_id: transaction_id, msisdn: @account.msisdn, price: "50"})
 
-=begin
+#=begin
     request.on_complete do |response|
       if response.success?
         result = response.body  
@@ -211,24 +211,8 @@ class QuestionsController < ApplicationController
     end
 
     request.run
-=end
-    #response_body
-    @xml = Nokogiri.XML(Billing.response_body).xpath('//methodResponse//params//param//value//struct//member')
-    #@xml = Nokogiri.XML(result).xpath('//methodResponse//params//param//value//struct//member') rescue nil
-    #render text: Billing.response_body.bytesize
-  end
-  
-  # Check if the user have been billed after the return from Moov platform
-  def user_billed
-    if @xml.blank?
-      return false
-    else
-      @xml.each do |result|
-        if result.xpath("name").text.strip == "responseCode"
-          (result.xpath("value").text.strip == "0") ? true : false
-        end
-      end
-    end
+#=end
+    return ((result.strip rescue nil) == "1" ? true : false)
   end
   
 end
