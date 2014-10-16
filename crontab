@@ -1,0 +1,1 @@
+01 06 * * * /bin/bash -l -c 'cd /home/erwan/MoovRevision && source /home/erwan/.rvm/gems/ruby-2.0.0-p195@rails4.0.7 && RAILS_ENV=development /home/erwan/.rvm/gems/ruby-2.0.0-p195@rails4.0.7/bin/rake question:send_daily_question --silent >> /home/erwan/cron_log.log 2>&1'

@@ -28,7 +28,7 @@ class QuestionsController < ApplicationController
   
   # initiate daily session
   def send_daily_gaming_session_question
-    accounts = Account.where(published: [nil, true], daily_count: nil)
+    accounts = Account.where(published: [nil, true], daily_count: [nil, 0])
     unless accounts.blank?
       accounts.each do |account|
         @session_question_type = account.gaming_sessions.first.question_type
@@ -186,7 +186,7 @@ class QuestionsController < ApplicationController
   
   # Checks if all the required rows are presents
   def valid_row(my_sheet, n)
-    (!my_sheet.cell(n, 1).blank? && !my_sheet.cell(n, 2).blank? && !my_sheet.cell(n, 3).blank? && !my_sheet.cell(n, 4).blank?) ? true : false    
+    (!(my_sheet.cell(n, 1).strip rescue nil).blank? && !(my_sheet.cell(n, 2).strip rescue nil).blank? && !(my_sheet.cell(n, 3).strip rescue nil).blank? && !(my_sheet.cell(n, 4).strip rescue nil).blank?) ? true : false    
   end
   
   # Bill customer from moov billing platform

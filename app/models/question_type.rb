@@ -7,7 +7,7 @@ class QuestionType < ActiveRecord::Base
   has_many :questions
   
   # Custom functions
-  def self.scholar_question_type
+  def scholar_question_type
     URI.escape(name) == URI.escape("Révision scolaire") ? true : false
   end
   
