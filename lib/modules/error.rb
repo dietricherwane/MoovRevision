@@ -22,7 +22,7 @@ module Error
     return "<?xml version='1.0' encoding='utf-8'?>
     <response>
       <screen_type>form</screen_type>
-      <text>#{text}</text>
+      <text>'#{text}'</text>
       <session_op>end</session_op>
       <screen_id>#{screen_id}</screen_id>
     </response>

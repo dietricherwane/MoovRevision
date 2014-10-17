@@ -13,7 +13,7 @@ module Registration
     return "<?xml version='1.0' encoding='utf-8'?>
     <response>
       <screen_type>#{screen_type}</screen_type>
-      <text>#{text}</text>
+      <text>'#{text}'</text>
       #{my_menu}
       <back_link>#{back_link}</back_link>
       <home_link>0</home_link>
