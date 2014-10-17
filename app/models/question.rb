@@ -37,7 +37,8 @@ class Question < ActiveRecord::Base
         if !question.blank?
           #send_question(question.wording)
           parameter = Parameter.first
-          request = Typhoeus::Request.new("#{parameter.outgoing_sms_url}to=#{account.msisdn}&text=#{URI.escape(question.wording)}", followlocation: true, method: :get)
+          #request = Typhoeus::Request.new("#{parameter.outgoing_sms_url}to=#{account.msisdn}&text=#{URI.escape(question.wording)}", followlocation: true, method: :get)
+          request = Typhoeus::Request.new("#{parameter.outgoing_sms_url}to=#{@account.msisdn}&text='#{question.force_encoding("utf-8")}'", followlocation: true, method: :get)
           request.on_complete do |response|
             if response.success?
               @response = (response.body.to_s.strip == "0: Accepted for delivery" || response.body.to_s.strip == "3: Queued for later delivery")

@@ -148,7 +148,8 @@ class QuestionsController < ApplicationController
   
   def send_question(question)
     parameter = Parameter.first
-    request = Typhoeus::Request.new("#{parameter.outgoing_sms_url}to=#{@account.msisdn}&text=#{URI.escape(question)}", followlocation: true, method: :get)
+    #request = Typhoeus::Request.new("#{parameter.outgoing_sms_url}to=#{@account.msisdn}&text=#{URI.escape(question)}", followlocation: true, method: :get)
+    request = Typhoeus::Request.new("#{parameter.outgoing_sms_url}to=#{@account.msisdn}&text='#{question.force_encoding("utf-8")}'", followlocation: true, method: :get)
     #request = Typhoeus::Request.new("#{parameter.outgoing_sms_url}to=#{@account.msisdn}&text=#{URI.escape(question)}", followlocation: true, method: :get)
 
     request.on_complete do |response|
