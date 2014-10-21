@@ -18,6 +18,27 @@ class Question < ActiveRecord::Base
     question_type.scholar_question_type
   end
   
+  # unpublish expired accounts
+  def self.unpublish_expired_accounts
+    accounts = Account.where("expires_at < '#{Date.today}'")
+    unless accounts.blank?
+      accounts.each do |account|
+        account.update_attributes(published: false)
+        account.gaming_sessions.first.update_attributes(unpublished: false, unpublished_at: DateTime.now)
+      end
+    end
+  end
+  
+  # reset daily session
+  def self.reset_daily_gaming_session_question
+    accounts = Account.where(published: [nil, true])
+    unless accounts.blank?
+      accounts.each do |account|
+        account.update_attributes(daily_count: 0)
+      end
+    end
+  end
+  
   # initiate daily session
   def self.send_daily_gaming_session_question
     accounts = Account.where(published: [nil, true], daily_count: [nil, 0])
