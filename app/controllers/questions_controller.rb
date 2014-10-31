@@ -126,10 +126,14 @@ class QuestionsController < ApplicationController
     # If we have general knowledge questions type
     if @session_question_type.academic_levels.blank?
       question = @session_question_type.questions.where("published IS NOT FALSE AND id > #{@account.current_question.to_i}").first rescue nil
-      question = @session_question_type.questions.where("published IS NOT FALSE").first rescue nil
+      if question.blank?
+        question = @session_question_type.questions.where("published IS NOT FALSE").first rescue nil
+      end
     else
       question = @account.academic_level.questions.where("published IS NOT FALSE AND id > #{@account.current_question.to_i}").first rescue nil
-      question = @account.academic_level.questions.where("published IS NOT FALSE AND id > 0").first rescue nil
+      if question.blank?
+        question = @account.academic_level.questions.where("published IS NOT FALSE AND id > 0").first rescue nil
+      end
     end
 
     if question != blank?
@@ -149,7 +153,7 @@ class QuestionsController < ApplicationController
   def send_question(question)
     parameter = Parameter.first
     #request = Typhoeus::Request.new("#{parameter.outgoing_sms_url}to=#{@account.msisdn}&text=#{URI.escape(question)}", followlocation: true, method: :get)
-    request = Typhoeus::Request.new("#{parameter.outgoing_sms_url}to=#{@account.msisdn}&text='#{question.force_encoding("utf-8")}'", followlocation: true, method: :get)
+    request = Typhoeus::Request.new("#{parameter.outgoing_sms_url}to=#{@account.msisdn}&text=#{URI.escape(question.wording)}", followlocation: true, method: :get)
     #request = Typhoeus::Request.new("#{parameter.outgoing_sms_url}to=#{@account.msisdn}&text=#{URI.escape(question)}", followlocation: true, method: :get)
 
     request.on_complete do |response|

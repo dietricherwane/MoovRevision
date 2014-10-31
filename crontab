@@ -1,1 +1,5 @@
-01 06 * * * /bin/bash -l -c 'cd /home/erwan/MoovRevision && source /home/erwan/.rvm/gems/ruby-2.0.0-p195@rails4.0.7 && RAILS_ENV=development /home/erwan/.rvm/gems/ruby-2.0.0-p195@rails4.0.7/bin/rake question:send_daily_question --silent >> /home/erwan/cron_log.log 2>&1'
+01 00 * * * /bin/bash -l -c 'cd /var/www/MoovRevision && source /home/erwan/.rvm/gems/ruby-2.0.0-p195@rails4.0.7 && RAILS_ENV=development /home/erwan/.rvm/gems/ruby-2.0.0-p195@rails4.0.7/bin/rake account:reset_daily_count --silent >> /home/erwan/cron_log.log 2>&1'
+
+10 00 * * * /bin/bash -l -c 'cd /var/www/MoovRevision && source /home/erwan/.rvm/gems/ruby-2.0.0-p195@rails4.0.7 && RAILS_ENV=development /home/erwan/.rvm/gems/ruby-2.0.0-p195@rails4.0.7/bin/rake account:unpublish_expired_accounts --silent >> /home/erwan/cron_log.log 2>&1'
+
+00 08 * * * /bin/bash -l -c 'cd /var/www/MoovRevision && source /home/erwan/.rvm/gems/ruby-2.0.0-p195@rails4.0.7 && RAILS_ENV=development /home/erwan/.rvm/gems/ruby-2.0.0-p195@rails4.0.7/bin/rake question:send_daily_question --silent >> /home/erwan/cron_log.log 2>&1'
